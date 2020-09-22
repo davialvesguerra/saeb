@@ -1,0 +1,486 @@
+---
+title: "RESULTADOS DO SAEB (ANEB - PROVA BRASIL) 2017"
+author: "Davi Guerra"
+date: "09/09/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+setwd("C:/Users/Davi/Desktop/universidade/3_semestre/metodos_2/saeb")
+
+#install.packages("tidyverse")
+#install.packages("moments")
+library(tidyverse)
+library(moments)
+
+data <- read.csv("amostra_190026570.csv", encoding = "UTF-8")
+```
+
+
+```{r funcoes, include=FALSE}
+
+#padronizar os gráficos
+padrao <- list(
+    theme_minimal(),
+    theme(axis.title.y=element_text(colour="black", size=12),
+          axis.title.x = element_text(colour="black", size=12),
+          axis.text = element_text(colour = "black", size=9.5),
+          panel.border = element_blank(),
+          axis.line = element_line(colour = "black")),
+    theme(legend.position="top"))
+  
+cor <- "#215493"
+
+  
+
+
+```
+
+## Questão 1
+
+Relacione as variáveis disponibilizadas na amostra que você recebeu (com seu número de matrícula) e classifique-as segundo o tipo.
+
+
+```{r questao_1}
+# tipos de variáveis:
+# "Ordinal","Nominal", "Intervalar", "Razão"
+
+tabela <- data.frame(c(1:length(data)))
+
+tabela["Variáveis"] <- colnames(data)
+tabela["Tipos de Variáveis"] <- c("Intervalar","Nominal","Nominal","Nominal","Nominal","Nominal",
+                                  "Nominal","Intervalar","Intervalar","Nominal","Nominal","Nominal",
+                                "Nominal","Ordinal","Ordinal","Ordinal","Ordinal","Ordinal","Nominal",
+                                  "Nominal")
+
+tabela1<-tabela %>% 
+  select("Variáveis","Tipos de Variáveis")
+tabela1
+
+
+```
+
+## Questão 2
+Apresente as variáveis categóricas em forma tabular e gráfica. Comente os resultados.
+
+```{r }
+data1<-data %>% 
+  select(tabela1[,1])
+
+data1
+```
+
+Região
+
+```{r questao_2, echo=FALSE, warning=FALSE}
+data1 %>% 
+  group_by(REGIAO) %>% 
+  summarise(n = n()) %>% 
+  ggplot(aes(REGIAO,n,label = n)) +
+    geom_bar(stat='identity',fill = cor)+
+    scale_y_continuous(limits = c(0,1000))+
+    labs(x="Regiões", y="Frequência Absoluta")+
+    padrao
+
+ggsave('imagens/regiao.png',width=158,height=93,units='mm')
+
+
+```
+
+
+Estado
+
+```{r}
+data1 %>% 
+  group_by(UF) %>% 
+  summarise(n = n()) %>%
+
+  ggplot(aes(UF,n,label = n)) +
+    geom_bar(stat='identity',fill = cor)+
+    geom_text(vjust=-0.5, size=4)+
+    scale_y_continuous(limits = c(0,500))+
+    labs(x="Estado", y="Frequência Absoluta") +
+    padrao
+
+ggsave('imagens/estado.png',width=158,height=93,units='mm')
+
+
+```
+Município
+
+```{r}
+
+df_municipios<- readxl::read_excel('DTB_BRASIL_MUNICIPIO.xls') #carregando banco para decodificar os municipios
+names(df_municipios)[8]<-'MUNICIPIO'
+data1$MUNICIPIO <- as.character(data1$MUNICIPIO)
+
+data1<- left_join(data1,df_municipios[,8:9],by="MUNICIPIO")
+
+sum(a$n)
+a<-data1 %>% 
+  group_by(`Nome_Município.x`) %>% 
+  summarise(n = n()) %>% 
+  mutate(f = n/sum(n)*100) %>% 
+  top_n(7) 
+  ggplot(aes(as.character(`Nome_Município.x`),n,label = n)) +
+    geom_bar(stat='identity',fill = cor)+
+    geom_text(vjust=-0.5)+
+    scale_y_continuous(limits = c(0,70))+
+    labs(x="Município", y="Frequência Absoluta") +
+    padrao
+ggsave('imagens/municipio.png',width=158,height=93,units='mm')
+
+```
+
+AREA
+```{r}
+
+data1 %>% 
+  group_by(AREA) %>% 
+  summarise(n = n()) %>% 
+  ggplot(aes(as.character(AREA),n,label = n)) +
+    geom_bar(stat='identity',fill = cor)+
+    geom_text(vjust=-0.5, size=4)+
+    scale_y_continuous(limits = c(0,2000))+
+    labs(x="Área", y="Frequência Absoluta") +
+    padrao
+
+ggsave('imagens/area.png',width=158,height=93,units='mm')
+
+
+```
+
+DEPENDENCIA_ADM
+
+```{r}
+data1 %>% 
+  group_by(DEPENDENCIA_ADM) %>% 
+  summarise(n = n()) %>% 
+  ggplot(aes(DEPENDENCIA_ADM,n,label = n)) +
+    geom_bar(stat='identity',fill = cor)+
+    geom_text(vjust=-0.5, size=4)+
+    scale_y_continuous(limits = c(0,1500))+
+    labs(x="Dependência", y="Frequência Absoluta") +
+    padrao
+
+ggsave('imagens/dependencia_adm.png',width=158,height=93,units='mm')
+```
+
+SEXO
+```{r}
+data1 %>% 
+  group_by(SEXO) %>% 
+  summarise(n = n()) %>% 
+  drop_na() %>% 
+  ggplot(aes(SEXO,n,label = n)) +
+    geom_bar(stat='identity',fill = cor)+
+    geom_text(vjust=-0.5, size=4)+
+    scale_y_continuous(limits = c(0,1100))+
+    labs(x="Sexo", y="Frequência Absoluta") +
+    padrao
+
+ggsave('imagens/sexo.png',width=158,height=93,units='mm')
+```
+
+RACA_COR
+
+```{r}
+data1 %>% 
+  group_by(RACA_COR) %>% 
+  summarise(n = n()) %>% 
+  drop_na() %>% 
+  ggplot(aes(RACA_COR,n,label = n)) +
+    geom_bar(stat='identity',fill = cor)+
+    geom_text(vjust=-0.5, size=4)+
+    scale_y_continuous(limits = c(0,1100))+
+    labs(x="Cor", y="Frequência Absoluta") +
+    padrao
+
+ggsave('imagens/raca_cor.png',width=158,height=93,units='mm')
+
+```
+
+MES_NASC
+
+```{r}
+data1 %>% 
+  group_by(MES_NASC) %>% 
+  summarise(n = n()) %>% 
+  drop_na() %>% 
+  ggplot(aes(MES_NASC,n,label = n)) +
+    geom_bar(stat='identity',fill = cor)+
+    geom_text(vjust=-0.5, size=4)+
+    scale_y_continuous(limits = c(0,250))+
+    labs(x="Mês de Nascimento", y="Frequência Absoluta") +
+    padrao
+
+ggsave('imagens/mes_nasc.png',width=158,height=93,units='mm')
+
+
+```
+
+ANO_NASC
+```{r}
+data1 %>% 
+  group_by(ANO_NASC) %>% 
+  summarise(n = n()) %>%
+  drop_na() %>% 
+  ggplot(aes(ANO_NASC,n,label = n)) +
+    geom_bar(stat='identity',fill = cor)+
+    geom_text(vjust=-0.5, size=4)+
+    scale_y_continuous(limits = c(0,1000))+
+    labs(x="Ano de Nascimento", y="Frequência Absoluta") +
+    padrao
+ggsave('imagens/ano_nasc.png',width=158,height=93,units='mm')
+
+```
+
+COMPUTADOR
+
+```{r}
+data1 %>% 
+  group_by(COMPUTADOR) %>% 
+  summarise(n = n()) %>% 
+  drop_na() %>% 
+  ggplot(aes(COMPUTADOR,n,label = n)) +
+    geom_col(stat='identity',fill = cor)+
+    geom_text(hjust = -0.05, size=4)+
+    coord_flip()+
+    scale_y_continuous(limits = c(0,1000))+
+    labs(x="Computador", y="Frequência Absoluta") +
+    padrao
+
+
+ggsave('imagens/computador.png',width=158,height=93,units='mm')
+
+```
+
+USO_TEMPO_TELAS
+```{r}
+
+data1 %>% 
+  group_by(USO_TEMPO_TELAS) %>% 
+  summarise(n = n()) %>%
+  mutate(USO_TEMPO_TELAS = str_replace_all(USO_TEMPO_TELAS,"Não vejo TV, não navego na internet e não jogo jogos eletrônicos","Não vejo TV,\n não navego na internet \n e não jogo jogos eletrônicos")) %>% 
+  drop_na() %>% 
+  ggplot(aes(as.character(USO_TEMPO_TELAS),n,label = n)) +
+    geom_col(stat='identity',fill = cor)+
+    coord_flip()+
+    geom_text(hjust = -0.05, size=4)+
+    labs(x="Tempo de Uso em Frenta a Tela", y="Frequência Absoluta") +
+    padrao
+
+ggsave('imagens/uso_tempo_telas.png',width=158,height=93,units='mm')
+
+```
+
+AFAZERES_DOM
+
+```{r}
+
+data1 %>% 
+  group_by(AFAZERES_DOM) %>% 
+  summarise(n = n()) %>% 
+  drop_na() %>% 
+  ggplot(aes(AFAZERES_DOM,n,label = n)) +
+    geom_col(stat='identity',fill = cor)+
+    coord_flip()+
+    ylim(c(0,800))+
+    labs(x="Afazeres Domésticos", y="Frequência Absoluta") +
+    geom_text(hjust = -0.05, size=4)+
+    padrao
+
+ggsave('imagens/afazeres_dom.png',width=158,height=93,units='mm')
+
+```
+
+TRABALHO
+
+```{r}
+data1 %>% 
+  group_by(TRABALHO) %>% 
+  summarise(n = n()) %>%
+  drop_na() %>% 
+  ggplot(aes(TRABALHO,n,label = n)) +
+    geom_col(stat='identity',fill = cor)+
+    geom_text(vjust=-0.5, size=4)+
+    scale_y_continuous(limits = c(0,1750))+
+    labs(x="Trabalho", y="Frequência Absoluta") +
+    padrao
+
+ggsave('imagens/trabalho.png',width=158,height=93,units='mm')
+```
+PERSPECTIVAS
+
+```{r}
+data1 %>% 
+  group_by(PERSPECTIVAS) %>% 
+  summarise(n = n()) %>% 
+  drop_na() %>% 
+  ggplot(aes(PERSPECTIVAS,n,label = n)) +
+    geom_col(stat='identity',fill = cor)+
+    labs(x="Perspectivas", y="Frequência Absoluta") +
+    coord_flip()+
+    geom_text(hjust=-0.05, size=4)+
+    scale_y_continuous(limits = c(0,1450))+
+    padrao
+
+ggsave('imagens/perspectivas.png',width=158,height=93,units='mm')
+
+```
+ESC_PAI & ESC_MAE
+
+```{r}
+data1 %>% 
+  select(ESC_PAI,ESC_MAE) %>% 
+  gather(ESC_PAI,ESC_MAE,1:2) %>% 
+  rename("Pais" = ESC_PAI, "Escolaridade" = ESC_MAE) %>%
+  group_by(Pais, Escolaridade) %>% 
+  summarise(n = n()) %>% 
+  mutate(Escolaridade = sapply(Escolaridade, function(x){
+    if(x %in% "Completou a 4.ª série/5.º ano, mas não completou a 8.ª série/9.º ano do Ensino Fundamental"){return("Ensino Fundametal II Incompleto")}
+    if(x %in% "Completou a 8.ª série/9.º ano do Ensino Fundamental, mas não completou o Ensino Médio"){return("Ensino Médio Incompleto")}
+    if(x %in% "Completou o Ensino Médio, mas não completou a Faculdade"){return("Ensino Superior Incompleto")}
+    if(x %in% "Completou a Faculdade"){return("Ensino Superior")}
+    if(x %in% c("Não completou a 4.ª série/5.º ano do Ensino Fundametal","Não completou a 4.ª série/5.º ano do Ensino Fundamental")){return("Ensino Fundametal I Incompleto")}
+    else(x)
+  })) %>% 
+  mutate(f = n/20) %>% 
+  drop_na() %>% 
+ggplot(aes(Escolaridade,n,label = n,fill = Pais)) +
+    geom_bar(stat="identity",position='dodge')+
+    labs(x="Escolaridade", y="Frequência Absoluta") +
+    scale_fill_manual(labels = c("Mãe", "Pai"), values = c("#A11D21",cor)) +
+    coord_flip()+
+    geom_text(hjust=-0.05,position=position_dodge(width=0.9), size=4)+
+    padrao
+  
+
+
+ggsave('imagens/escolaridade.png',width=158,height=93,units='mm')
+```
+
+
+
+##Questão 3
+Para as variáveis quantitativas NOTA_LP e NOTA_MT apresente:
+
+Ramo e Folha, Distribuição de frequências, com intervalos de classe, Histograma, Medidas de posição, variabilidade, assimetria e curtose, e Box-plot
+
+
+
+```{r limpeza}
+materias1<-data %>% 
+  select(NOTA_LP,NOTA_MT) %>% 
+  gather(NOTA_LP,NOTA_MT,1:2) %>% 
+  rename("Materias" = NOTA_LP, "Notas" = NOTA_MT) 
+
+materias1 <- materias1[order(materias1$Notas),,drop = F]
+
+
+materias2<-materias1 %>% 
+  mutate("Ordenado" = sapply(Notas, function(nota){ 
+  classes <- seq(130,440,30)
+  for(classe in classes){
+    if(classe>nota){
+      return(classe-30)
+      }}})) %>% 
+  select(Materias,Ordenado) %>% 
+  group_by(Materias,Ordenado) %>%
+  summarise("Frequência Absoluta" = n())
+
+
+```
+
+Ramo e Folha
+
+```{r}
+stem(data$NOTA_LP)
+stem(data$NOTA_MT)
+
+
+```
+
+
+
+
+Distribuição de frequências, com intervalos de classe
+
+```{r}
+
+
+materias2 %>% 
+  group_by(Materias) %>%
+  mutate("Frequência Relativa" = sapply(`Frequência Absoluta`, function(x) str_c(x/2000*100,"%")))
+   
+```
+
+Histograma
+
+```{r}
+ggplot(materias2,aes(x = Ordenado, y = `Frequência Absoluta`, fill = Materias)) +
+  geom_histogram(stat="identity",position='dodge')+
+  scale_x_continuous(labels = seq(110,410,20) , breaks = seq(110,410,20) )+
+  scale_fill_manual(name="Matérias",label = c("Portguês","Matemática"), values=c("#A11D21", cor)) +
+  labs(x="Classes", y="Frequência Absoluta") +
+  padrao
+
+
+ggsave('imagens/histograma.png',width=158,height=93,units='mm')
+
+
+```
+
+Medidas de posição, variabilidade, assimetria e curtose.
+
+```{r}
+
+
+portugues <- as.vector(summary(data$NOTA_LP))
+portugues[7] <- kurtosis(data$NOTA_LP)
+portugues[8] <-  (mean(data$NOTA_LP) - median(data$NOTA_LP))/sd(data$NOTA_LP)
+
+matematica <- as.vector(summary(data$NOTA_MT))
+matematica[7] <- kurtosis(data$NOTA_MT)
+matematica[8] <- (mean(data$NOTA_MT) - median(data$NOTA_MT))/sd(data$NOTA_MT)
+
+
+medidas <- rbind(portugues,matematica) %>%
+  data.frame %>% 
+  rename("Mínimo" = "X1", "Q1" = "X2","Mediana" = "X3","Média" = "X4",
+         "Q3" = "X5", "Máximo
+         "= "X6","Curtose" = "X7","Assimetria"= "X8")
+
+mean(matematica)
+sd(data1$NOTA_MT)
+
+medidas
+
+```
+
+Box-plot
+
+```{r}
+
+  
+ggplot(materias1, aes(x=Materias, y=Notas)) +
+  geom_boxplot(fill=c(cor), width = 0.5)+
+  stat_summary(fun="mean", geom="point", shape=23, size=3, fill="white")+
+  labs(x="Matérias") +
+  scale_x_discrete(labels=c("Portugûes","Matemática"))+
+  padrao
+
+
+ggsave('imagens/boxplot.png',width=158,height=93,units='mm')
+
+
+
+```
+
+
+
+
+
+
+
